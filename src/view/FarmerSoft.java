@@ -167,12 +167,45 @@ public class FarmerSoft {
 	 * @throws SQLException 
 	 * @throws ClassNotFoundException 
 	 */
+	public Component ClockPane() {
+         //setLayout(new BorderLayout());
+         clock = new JLabel();
+         
+         clock.setBounds(744, -85, 500, 300);
+         //clock.setHorizontalAlignment(JLabel.CENTER);
+         clock.setFont(UIManager.getFont("Label.font").deriveFont(Font.BOLD, 20f));
+         tickTock();
+         //add(clock);
+
+         Timer timer = new Timer(500, new ActionListener() 
+         {
+             public void actionPerformed(ActionEvent e) {
+                 tickTock();
+             }
+         });
+         timer.setRepeats(true);
+         timer.setCoalesce(true);
+         timer.setInitialDelay(0);
+         timer.start();
+		return clock;
+         
+        
+     }
+	 
+     public void tickTock() 
+     {
+     	//DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.UK);
+
+         //clock.setText(df.format(new Date()));
+         clock.setText(DateFormat.getDateTimeInstance().format(new Date()));
+     }
 	private void initialize() throws ClassNotFoundException, SQLException {
 		final Connection connection = MyDataBase.doConnection();
 		frame = new JFrame("Farmer Information System");
 		frame.setBounds(100, 100, 1000, 700);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
+		frame.add(ClockPane());
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setBounds(47, 66, 903, 484);
@@ -247,15 +280,33 @@ public class FarmerSoft {
 		panelTransaction.add(textFieldbuyerID);
 		textFieldbuyerID.setColumns(10);
 		
-		textFieldtransactionDate = new JTextField();
-		textFieldtransactionDate.setBounds(204, 190, 111, 20);
-		panelTransaction.add(textFieldtransactionDate);
-		textFieldtransactionDate.setColumns(10);
+		//textFieldtransactionDate = new JTextField();
+		//textFieldtransactionDate.setBounds(204, 190, 111, 20);
+		//panelTransaction.add(textFieldtransactionDate);
+		//textFieldtransactionDate.setColumns(10);
 		
-		textFieldtransactionTime = new JTextField();
-		textFieldtransactionTime.setBounds(204, 237, 111, 20);
-		panelTransaction.add(textFieldtransactionTime);
-		textFieldtransactionTime.setColumns(10);
+		Properties properties1 = new Properties();
+		properties1.put("text.today", "Today");
+		properties1.put("text.month", "Month");
+		properties1.put("text.year", "Year");
+		
+		UtilDateModel model = new UtilDateModel();
+		JDatePanelImpl datePanel1 = new JDatePanelImpl(model, properties1);
+		final JDatePickerImpl datePicker1 = new JDatePickerImpl(datePanel1, new DateLabelFormatter());
+		datePicker1.setBounds(204, 190, 111, 20);
+		panelTransaction.add(datePicker1);
+		
+		final JSpinner timeSpinner = new JSpinner();
+		timeSpinner.setModel(new SpinnerDateModel());
+		timeSpinner.setEditor(new JSpinner.DateEditor(timeSpinner,"HH:mm"));
+		timeSpinner.setBounds(204, 237, 111, 20);
+		panelTransaction.add(timeSpinner);
+		
+		
+		//textFieldtransactionTime = new JTextField();
+		//textFieldtransactionTime.setBounds(204, 237, 111, 20);
+		//panelTransaction.add(textFieldtransactionTime);
+		//textFieldtransactionTime.setColumns(10);
 		
 		textFieldquantityChicken = new JTextField();
 		textFieldquantityChicken.setBounds(204, 277, 111, 20);
@@ -275,8 +326,8 @@ public class FarmerSoft {
 					PreparedStatement preparedStatement = connection.prepareStatement(query);
 					preparedStatement.setString(1, textFieldtransactionID.getText());
 					preparedStatement.setString(2, textFieldbuyerID.getText());
-					preparedStatement.setString(3, textFieldtransactionDate.getText());
-					preparedStatement.setString(4, textFieldtransactionTime.getText());
+					preparedStatement.setString(3, datePicker1.getJFormattedTextField().getText().toString());
+					preparedStatement.setString(4, timeSpinner.getValue());
 					preparedStatement.setString(5, textFieldquantityChicken.getText());
 					preparedStatement.setString(6, textFieldquantityTurkey.getText());
 
@@ -284,11 +335,6 @@ public class FarmerSoft {
 
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data saved");
-					
-
-
-
-					
 					
 					preparedStatement.close();
 					//res.close();
@@ -308,21 +354,26 @@ public class FarmerSoft {
 			public void actionPerformed(ActionEvent e) {
 
 				try {
-					String query= "Update transaction set transactionDate='"+textFieldtransactionDate.getText()+"',transactionTime='"+textFieldtransactionTime.getText()+"',quantityChicken='"+textFieldquantityChicken.getText()+"',quantityTurkey='"+textFieldquantityTurkey.getText()+"'where transactionID='"+textFieldtransactionID.getText()+"' ";
+					//String query= "Update transaction set transactionDate='"+datePicker.getJFormattedTextField().getText().toString()+"',transactionTime='"+timeSpinner.getValue()+"',quantityChicken='"+textFieldquantityChicken.getText()+"',quantityTurkey='"+textFieldquantityTurkey.getText()+"'where transactionID='"+textFieldtransactionID.getText()+"' ";
+					String query= "Update transaction set transactionDate=? ,transactionTime=? ,quantityChicken=? ,quantityTurkey=? where transactionID=? ";
 					PreparedStatement preparedStatement = connection.prepareStatement(query);
+					
+					preparedStatement.setString(1, datePicker1.getJFormattedTextField().getText().toString());
+					preparedStatement.setObject(2, timeSpinner.getValue());
+					preparedStatement.setString(3, textFieldquantityChicken.getText());
+					preparedStatement.setString(4, textFieldquantityTurkey.getText());
+					preparedStatement.setString(5, textFieldtransactionID.getText());
 					
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data updated");
-					
 
 					//transactionID='"+textFieldtransactionID.getText()+"',farmerID='"+textFieldfarmerID.getText()+"',buyerID='"+textFieldBuyerID.getText()+"',
 
-					
-					
 					preparedStatement.close();
 					//res.close();
 				} catch (Exception e1) {
 					e1.printStackTrace();
+					
 				}
 				refreshTableTransaction();
 			}
@@ -413,10 +464,16 @@ public class FarmerSoft {
 		panelChicken.add(textFieldquantity);
 		textFieldquantity.setColumns(10);
 		
-		textFielddateEntry = new JTextField();
-		textFielddateEntry.setBounds(133, 310, 114, 20);
-		panelChicken.add(textFielddateEntry);
-		textFielddateEntry.setColumns(10);
+		Properties properties2 = new Properties();
+		properties2.put("text.today", "Today");
+		properties2.put("text.month", "Month");
+		properties2.put("text.year", "Year");
+		
+		UtilDateModel model2 = new UtilDateModel();
+		JDatePanelImpl datePanel2 = new JDatePanelImpl(model2, properties2);
+		final JDatePickerImpl datePicker2 = new JDatePickerImpl(datePanel2, new DateLabelFormatter());
+		datePicker2.setBounds(133, 310, 114, 20);
+		panelChicken.add(datePicker2);
 		
 		JButton btnSave_1 = new JButton("Save");
 		btnSave_1.addActionListener(new ActionListener() {
@@ -429,20 +486,16 @@ public class FarmerSoft {
 					preparedStatement.setString(3, textFieldpriceBuy.getText());
 					preparedStatement.setString(4, textFieldconsumptionPerDay.getText());
 					preparedStatement.setString(5, textFieldquantity.getText());
-					preparedStatement.setString(6, textFielddateEntry.getText());
+					preparedStatement.setString(6, datePicker2.getJFormattedTextField().getText().toString());
 
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data saved");
-					
-
-
-
-					
 					
 					preparedStatement.close();
 					//res.close();
 				} catch (Exception e1) {
 					e1.printStackTrace();
+					JOptionPane.showMessageDialog(null, "The Chicken ID is already in the database!");
 				}
 				refreshTableChicken();
 			}
@@ -454,15 +507,11 @@ public class FarmerSoft {
 		btnUpdate_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					String query= "Update chicken set chickenID='"+textFieldchickenID.getText()+"',type='"+textFieldtype.getText()+"',priceBuy='"+textFieldpriceBuy.getText()+"',consumptionPerDay='"+textFieldconsumptionPerDay.getText()+"',quantity='"+textFieldquantity.getText()+"',dateEntry='"+textFielddateEntry.getText()+"'where chickenID='"+textFieldchickenID.getText()+"' ";
+					String query= "Update chicken set chickenID='"+textFieldchickenID.getText()+"',type='"+textFieldtype.getText()+"',priceBuy='"+textFieldpriceBuy.getText()+"',consumptionPerDay='"+textFieldconsumptionPerDay.getText()+"',quantity='"+textFieldquantity.getText()+"',dateEntry='"+datePicker2.getJFormattedTextField().getText().toString()+"'where chickenID='"+textFieldchickenID.getText()+"' ";
 					PreparedStatement preparedStatement = connection.prepareStatement(query);
 					
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data updated");
-					
-
-
-
 					
 					
 					preparedStatement.close();
@@ -487,15 +536,11 @@ public class FarmerSoft {
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data Deleted");
 					
-
-
-
-					
-					
 					preparedStatement.close();
 					//res.close();
 				} catch (Exception e1) {
 					e1.printStackTrace();
+					JOptionPane.showMessageDialog(null, "The data cannot be deleted!");
 				}
 				refreshTableChicken();
 
@@ -576,10 +621,21 @@ public class FarmerSoft {
 		panelTurkey.add(textFieldquantityT);
 		textFieldquantityT.setColumns(10);
 		
-		textFielddateEntryT = new JTextField();
-		textFielddateEntryT.setBounds(194, 299, 122, 20);
-		panelTurkey.add(textFielddateEntryT);
-		textFielddateEntryT.setColumns(10);
+// 		textFielddateEntryT = new JTextField();
+// 		textFielddateEntryT.setBounds(194, 299, 122, 20);
+// 		panelTurkey.add(textFielddateEntryT);
+// 		textFielddateEntryT.setColumns(10);
+		
+		Properties properties3 = new Properties();
+		properties3.put("text.today", "Today");
+		properties3.put("text.month", "Month");
+		properties3.put("text.year", "Year");
+		
+		UtilDateModel model3 = new UtilDateModel();
+		JDatePanelImpl datePanel3 = new JDatePanelImpl(model3, properties3);
+		final JDatePickerImpl datePicker3 = new JDatePickerImpl(datePanel3, new DateLabelFormatter());
+		datePicker3.setBounds(194, 299, 86, 20);
+		panelTurkey.add(datePicker3);
 		
 		JButton btnSave_2 = new JButton("Save");
 		btnSave_2.addActionListener(new ActionListener() {
@@ -591,20 +647,17 @@ public class FarmerSoft {
 					preparedStatement.setString(2, textFieldpriceBuyT.getText());
 					preparedStatement.setString(3, textFieldconsumptionPerDayT.getText());
 					preparedStatement.setString(4, textFieldquantityT.getText());
-					preparedStatement.setString(5, textFielddateEntryT.getText());
+					preparedStatement.setString(5, datePicker2.getJFormattedTextField().getText().toString());
 
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data saved");
-					
-
-
-
 					
 					
 					preparedStatement.close();
 					//res.close();
 				} catch (Exception e1) {
 					e1.printStackTrace();
+					JOptionPane.showMessageDialog(null, "The Turkey ID is already in the database!");
 				}
 				refreshTableTurkey();
 			}
@@ -616,15 +669,11 @@ public class FarmerSoft {
 		btnUpdate_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					String query= "Update turkey set turkeyID='"+textFieldturkeyID.getText()+"',priceBuy='"+textFieldpriceBuyT.getText()+"',consumptionPerDay='"+textFieldconsumptionPerDayT.getText()+"',quantity='"+textFieldquantityT.getText()+"',dateEntry='"+textFielddateEntryT.getText()+"'where turkeyID='"+textFieldturkeyID.getText()+"' ";
+					String query= "Update turkey set turkeyID='"+textFieldturkeyID.getText()+"',priceBuy='"+textFieldpriceBuyT.getText()+"',consumptionPerDay='"+textFieldconsumptionPerDayT.getText()+"',quantity='"+textFieldquantityT.getText()+"',dateEntry='"+datePicker2.getJFormattedTextField().getText().toString()+"'where turkeyID='"+textFieldturkeyID.getText()+"' ";
 					PreparedStatement preparedStatement = connection.prepareStatement(query);
 					
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data updated");
-					
-
-
-
 					
 					
 					preparedStatement.close();
@@ -647,10 +696,6 @@ public class FarmerSoft {
 					
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data Deleted");
-					
-
-
-
 					
 					
 					preparedStatement.close();
@@ -756,15 +801,12 @@ public class FarmerSoft {
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data saved");
 					
-
-
-
-					
 					
 					preparedStatement.close();
 					//res.close();
 				} catch (Exception e1) {
 					e1.printStackTrace();
+					JOptionPane.showMessageDialog(null, "The Buyer ID is already in the database!");
 				}
 				refreshTableBuyer();
 			}
@@ -782,11 +824,6 @@ public class FarmerSoft {
 					
 					preparedStatement.execute();
 					JOptionPane.showMessageDialog(null, "Data updated");
-					
-
-
-
-					
 					
 					preparedStatement.close();
 					//res.close();
