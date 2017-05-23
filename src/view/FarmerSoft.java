@@ -24,7 +24,7 @@ import java.awt.event.FocusListener;
 import javax.swing.JFrame;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-
+// Salam Alaikum I am new in Github
 public class FarmerSoft {
 
 	private JFrame frame;
